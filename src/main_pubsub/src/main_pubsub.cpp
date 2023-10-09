@@ -38,8 +38,30 @@ class sensor
 class motor
 {
   public:
-  float motor[6];
+  ros::NodeHandle nh;
+  std::vector<ros::Subscriber> sub_motor;
+
+  static int id; //基板のid
+  float motor_[6]; //各モータの制御値
+
+  motor(){
+    id++;
+    std::cout << "モータ基板 " << id << " 追加" << std::endl;
+
+    for(int i = 0; i > sizeof(motor_); i++){
+      std::string motor_ = "motor" + i;
+      // ros::Subscriber sub_motor_ = nh.subscribe(motor_, 1,&motorcb, this);
+      ros::Subscriber sub_motor_ = nh.subscribe<std_msgs::Float32>(motor_, 1, boost::bind(&RobotTestNode::motorcb, id, i, _1));
+      sub_motor.push_back(sub_motor_);
+    }
+  }
+  
+  private:
+ 
 };
+
+
+
 
 class cylinder
 {
@@ -68,11 +90,12 @@ private:
     pub_sensor_.publish(sensor);
     pub_switch_.publish(switch_);
   }
-  
+
+public:
   // sub cb
-  motor Motor;
-  void motorcb(const std_msgs::Float32::ConstPtr& msg, const int id){
-    Motor.motor[id] = msg->data;
+  motor Motor[1];
+  void motorcb(const std_msgs::Float32::ConstPtr& msg, const int id, const int num){
+    Motor[id].motor_[num] = msg->data;
   }
 
   cylinder Cylinder;
@@ -96,14 +119,6 @@ private:
     pub_switch_ = nh.advertise<std_msgs::Float32MultiArray>("/switch", 1);
      
     // sub
-    std::vector<ros::Subscriber> motor;
-    for(int i = 0; i > sizeof(Motor.motor); i++){
-      std::string motor_ = "motor" + i;
-      // ros::Subscriber sub_motor_ = nh.subscribe(motor_, 1,&motorcb, this);
-      ros::Subscriber sub_motor_ = nh.subscribe<std_msgs::Float32>(motor_, 1, boost::bind(&motorcb, _1, i));
-      motor.push_back(sub_motor_);
-    }
-
     std::vector<ros::Subscriber> cylinder;
     for(int i = 0; i > sizeof(Cylinder.cylinder); i++){
       std::string cylinder_ = "cylinder" + i;
@@ -141,6 +156,7 @@ private:
   */
   }
 };
+
 
 int main(int argc, char* argv[])
 {
