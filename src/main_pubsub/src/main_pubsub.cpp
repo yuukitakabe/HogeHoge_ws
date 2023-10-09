@@ -13,9 +13,12 @@
 #include "std_msgs/String.h"
 #include "std_msgs/Float32.h"
 #include "std_msgs/Float32MultiArray.h"
+#include "std_msgs/Bool.h"
 #include "vector"
 #include <boost/bind.hpp>
 // #include "main_pubsub/main_pubsub.h"
+
+// class RobotTestNode;
 
 /*
 class encorder
@@ -35,44 +38,98 @@ class sensor
 };
 */
 
-class motor
+
+class motor //モータ基板のクラス
 {
-  public:
-  ros::NodeHandle nh;
-  std::vector<ros::Subscriber> sub_motor;
-
-  static int id; //基板のid
-  float motor_[6]; //各モータの制御値
-
-  motor(){
-    id++;
-    std::cout << "モータ基板 " << id << " 追加" << std::endl;
-
-    for(int i = 0; i > sizeof(motor_); i++){
-      std::string motor_ = "motor" + i;
-      // ros::Subscriber sub_motor_ = nh.subscribe(motor_, 1,&motorcb, this);
-      ros::Subscriber sub_motor_ = nh.subscribe<std_msgs::Float32>(motor_, 1, boost::bind(&RobotTestNode::motorcb, id, i, _1));
-      sub_motor.push_back(sub_motor_);
-    }
-  }
-  
   private:
+    int id; //基板のid
+    float motor_[6]; //各モータの制御値
  
+  public:
+    ros::NodeHandle nh;
+    std::vector<ros::Subscriber> sub_motor; //モータのsubscriberを格納
+    inline static std::vector<motor*> refs;
+
+    motor(){
+      id++;
+      std::cout << "モータ基板 " << id << " 追加" << std::endl;
+
+      for(int i = 1; i > (sizeof(motor_) + 1); i++){
+        std::string motor_ = "motor_" + std::to_string(id) + "_" + std::to_string(i);
+        ros::Subscriber sub_motor_ = nh.subscribe<std_msgs::Float32>(motor_, 1, boost::bind(&motor::motorcb, this, id, i, _1));
+        sub_motor.push_back(sub_motor_);
+      }
+    }
+
+    void motorcb(const int id, const int num, const std_msgs::Float32::ConstPtr& msg){
+      refs[id-1]->Set_motor(num, msg->data);
+    }
+
+    void Set_motor(const int num, const double data){
+      motor_[num] = data;
+    }
 };
 
-
-
-
-class cylinder
+class cylinder //シリンダのクラス
 {
+  private:
+    int id; //基板のid
+    bool cylinder_[6]; //各シリンダの制御値
+ 
   public:
-  float cylinder[8];
+    ros::NodeHandle nh;
+    std::vector<ros::Subscriber> sub_cylinder; //シリンダのsubscriberを格納 
+    inline static std::vector<cylinder*> refs;
+
+    cylinder(){
+      id++;
+      std::cout << "シリンダ基板 " << id << " 追加" << std::endl;
+
+      for(int i = 0; i > (sizeof(cylinder) + 1); i++){
+        std::string cylinder_ = "cylinder" + std::to_string(id) + "_" + std::to_string(i);
+        ros::Subscriber sub_cylinder_ = nh.subscribe<std_msgs::Bool>(cylinder_, 1, boost::bind(&cylinder::cylindercb, this, id, i, _1));
+        sub_cylinder.push_back(sub_cylinder_);
+      }
+    }
+
+    void cylindercb(const int id, const int num, const std_msgs::Bool::ConstPtr& msg){
+      refs[id-1]->Set_cylinder(num, msg->data);
+    }
+
+    void Set_cylinder(const int num, const double data){
+      cylinder_[num] = data;
+    }
 };
 
 class servo
 {
+  private:
+    int id; //基板のid
+    float servo_[8];
+  
   public:
-  float servo[8];
+    ros::NodeHandle nh;
+    std::vector<ros::Subscriber> sub_servo; //サーボのsubscriberを格納 
+    inline static std::vector<servo*> refs;
+
+    servo(){
+      id++;
+      std::cout << "サーボ基板 " << id << " 追加" << std::endl;
+
+      for(int i = 0; i > sizeof(servo_); i++){
+        std::string servo_ = "servo" + std::to_string(id) + "_" + std::to_string(i);
+        ros::Subscriber sub_servo_ = nh.subscribe<std_msgs::Float32>(servo_, 1, boost::bind(&servo::servocb, this, id, i, _1));
+        sub_servo.push_back(sub_servo_);
+      }
+    }
+
+    void servocb(const int id, const int num, const std_msgs::Float32::ConstPtr& msg){
+      refs[id-1]->Set_servo(num, msg->data);
+    }
+
+    void Set_servo(const int num, const double data){
+      servo_[num] = data;
+    }
 };
 
 class RobotTestNode
@@ -84,6 +141,8 @@ private:
   ros::Publisher pub_sensor_;
   ros::Publisher pub_switch_;
   
+  public:
+  // pub cb
   void sensor_pub(std_msgs::Float32MultiArray encoder,std_msgs::Float32MultiArray gylo, std_msgs::Float32MultiArray sensor, std_msgs::Float32MultiArray switch_){
     pub_encoder_.publish(encoder);
     pub_gylo_.publish(gylo);
@@ -91,25 +150,6 @@ private:
     pub_switch_.publish(switch_);
   }
 
-public:
-  // sub cb
-  motor Motor[1];
-  void motorcb(const std_msgs::Float32::ConstPtr& msg, const int id, const int num){
-    Motor[id].motor_[num] = msg->data;
-  }
-
-  cylinder Cylinder;
-  void cylindercb(const std_msgs::Float32::ConstPtr& msg, const int id){
-    Cylinder.cylinder[id] = msg->data;
-  }
-
-  servo Servo;
-  void servocb(const std_msgs::Float32::ConstPtr& msg, const int id){
-    Servo.servo[id] = msg->data;
-  }
-
-
-  public:
   RobotTestNode()
   {
     ros::NodeHandle nh;
@@ -117,27 +157,6 @@ public:
     pub_encoder_ = nh.advertise<std_msgs::Float32MultiArray>("/encoder", 1);
     pub_sensor_ = nh.advertise<std_msgs::Float32MultiArray>("/sensor", 1);
     pub_switch_ = nh.advertise<std_msgs::Float32MultiArray>("/switch", 1);
-     
-    // sub
-    std::vector<ros::Subscriber> cylinder;
-    for(int i = 0; i > sizeof(Cylinder.cylinder); i++){
-      std::string cylinder_ = "cylinder" + i;
-      // ros::Subscriber sub_cylinder_ = nh.subscribe(cylinder_, 1,&cylindercb, this);
-      ros::Subscriber sub_cylinder_ = nh.subscribe<std_msgs::Float32>(cylinder_, 1, boost::bind(&cylindercb, _1, i));
-      cylinder.push_back(sub_cylinder_);
-    }
-
-    std::vector<ros::Subscriber> servo;
-    for(int i = 0; i > sizeof(Servo.servo); i++){
-      std::string servo_ = "servo" + i;
-      // ros::Subscriber sub_servo_ = nh.subscribe(servo_, 1,&servocb, this);
-      ros::Subscriber sub_servo_ = nh.subscribe<std_msgs::Float32>(servo_, 1, boost::bind(&servocb, _1, i));
-      servo.push_back(sub_servo_);
-    }
-
-    // sub_motor_ = nh.subscribe("/motor", 1,&RobotTestNode::motorcb, this);
-    // sub_cylinder_ = nh.subscribe("/cylinder", 1,&RobotTestNode::cylindercb, this);
-    // sub_servo_ = nh.subscribe("/servo", 1,&RobotTestNode::servocb, this);
   }
   
   void mainloop()
@@ -163,6 +182,10 @@ int main(int argc, char* argv[])
   ros::init(argc, argv, "main");
 
   RobotTestNode robot_test;
+  // sub cb
+  motor Motor[1];
+  // cylinder Cylinder[1];
+  // servo Servo[1];
 
   robot_test.mainloop();
 }
