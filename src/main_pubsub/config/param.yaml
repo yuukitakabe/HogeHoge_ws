@@ -1,0 +1,11 @@
+board_list:
+  - name: moror
+    num: 1
+  - name: cylinder
+    num: 1
+  - name: servo
+    num: 1
+  - name: encorder
+    num: 1
+  - name: sensor
+    num: 1

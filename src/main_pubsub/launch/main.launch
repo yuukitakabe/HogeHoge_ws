@@ -3,5 +3,8 @@
     <param name="motor" value="1"/>
     <param name="cylinder" value="1"/>
     <param name="servo" value="1"/>
+    <!-- <param name="encorder" value="1"/> -->
+    <!-- <param name="sensor" value="1"/> -->
+    <!-- <rosparam command="load" file="$(find main_pubsub)/config/main.yaml"/> -->
   </node>
 </launch>

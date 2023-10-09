@@ -163,14 +163,53 @@ private:
     int motor_param = 0;
     int cylinder_param = 0;
     int servo_param = 0;
+    int encorder_param = 0;
+    int sensor_param = 0;
     pnh.getParam("motor", motor_param);
     pnh.getParam("cylinder", cylinder_param);
     pnh.getParam("servo", servo_param);
+    // pnh.getParam("encorder", encorder_param);
+    // pnh.getParam("sensor", sensor_param);
+    
+    /*
+    // get rosparam yaml
+    std::vector<int> param;
+    XmlRpc::XmlRpcValue board_list;
+    pnh.getParam("board_list", board_list);
+    ROS_ASSERT(board_list.getType() == XmlRpc::XmlRpcValue::TypeArray);
+    // ROS_INFO("member size: %i", (int)board_list.size());
+
+    for (int32_t i = 0; i < board_list.size(); ++i)
+    {
+      // ROS_INFO("read [%i]", i);
+      int num = 0;
+      std::string name = "";
+      if (!board_list[i]["num"].valid() || !board_list[i]["name"].valid())
+      {
+        ROS_WARN("No num or name");
+        continue;
+      }
+      if (board_list[i]["num"].getType() == XmlRpc::XmlRpcValue::TypeInt)
+        num = static_cast<int>(board_list[i]["num"]);
+      if (board_list[i]["name"].getType() == XmlRpc::XmlRpcValue::TypeString)
+        name = static_cast<std::string>(board_list[i]["name"]);
+      // ROS_INFO("[%i] num: %i, name: %s", i, num, name.c_str());
+      param.push_back(num);
+    }
+
+    motor_param = param[0];
+    cylinder_param = param[1];
+    servo_param = param[2];
+    encorder_param = param[3];
+    sensor_param = param[4];
+    //*/
 
     // 基板クラス
     motor Motor[motor_param];
     cylinder Cylinder[cylinder_param];
     servo Servo[servo_param];
+    // encorder Encorder[encorder_param];
+    // sensor Sensor[sensor_param];
   }
   
   void mainloop()
