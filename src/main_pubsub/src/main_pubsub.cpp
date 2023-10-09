@@ -157,6 +157,20 @@ private:
     pub_encoder_ = nh.advertise<std_msgs::Float32MultiArray>("/encoder", 1);
     pub_sensor_ = nh.advertise<std_msgs::Float32MultiArray>("/sensor", 1);
     pub_switch_ = nh.advertise<std_msgs::Float32MultiArray>("/switch", 1);
+
+    // get rosparam
+    ros::NodeHandle pnh("~");
+    int motor_param = 0;
+    int cylinder_param = 0;
+    int servo_param = 0;
+    pnh.getParam("motor", motor_param);
+    pnh.getParam("cylinder", cylinder_param);
+    pnh.getParam("servo", servo_param);
+
+    // 基板クラス
+    motor Motor[motor_param];
+    cylinder Cylinder[cylinder_param];
+    servo Servo[servo_param];
   }
   
   void mainloop()
@@ -182,10 +196,6 @@ int main(int argc, char* argv[])
   ros::init(argc, argv, "main");
 
   RobotTestNode robot_test;
-  // sub cb
-  motor Motor[1];
-  // cylinder Cylinder[1];
-  // servo Servo[1];
-
+  
   robot_test.mainloop();
 }
