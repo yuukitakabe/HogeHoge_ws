@@ -25,7 +25,7 @@ class RobotTestNode
 private:
   // pub
   ros::Publisher pub_odom_;
-  ros::Publisher pub_encodeder_;
+  ros::Publisher pub_encoder_;
   ros::Publisher pub_sensor_;
   ros::Publisher pub_switch_;
   
@@ -33,14 +33,14 @@ private:
   ros::Subscriber sub_twist_;
   ros::Subscriber sub_motor_;
   ros::Subscriber sub_cylinder_;
-  ros::Subscriber sub_serve_;
+  ros::Subscriber sub_servo_;
 
   // 
   geometry_msgs::Twist twist_;
 
   std_msgs::Float32MultiArray motor_;
   std_msgs::Float32MultiArray cylinder_;
-  std_msgs::Float32MultiArray serve_;
+  std_msgs::Float32MultiArray servo_;
   
   // nav_msgs::Odometry odom_;
   // void cbOdom(const nav_msgs::Odometry::ConstPtr& msg)
@@ -62,13 +62,13 @@ private:
     cylinder_ = *msg;
   }
 
-  void servecb(const std_msgs::Float32MultiArray::ConstPtr& msg){
-    serve_ = *msg;
+  void servocb(const std_msgs::Float32MultiArray::ConstPtr& msg){
+    servo_ = *msg;
   }
 
-  void sensor_pub(nav_msgs::Odometry odom, std_msgs::Float32MultiArray encodeder, std_msgs::Float32MultiArray sensor, std_msgs::Float32MultiArray switch_){
+  void sensor_pub(nav_msgs::Odometry odom, std_msgs::Float32MultiArray encoder, std_msgs::Float32MultiArray sensor, std_msgs::Float32MultiArray switch_){
     pub_odom_.publish(odom);
-    pub_encodeder_.publish(encodeder);
+    pub_encoder_.publish(encoder);
     pub_sensor_.publish(sensor);
     pub_switch_.publish(switch_);
   }
@@ -79,7 +79,7 @@ private:
     ros::NodeHandle nh;
     // pub
     pub_odom_ = nh.advertise<geometry_msgs::Twist>("/odom", 1);
-    pub_encodeder_ = nh.advertise<std_msgs::Float32MultiArray>("/encodeder", 1);
+    pub_encoder_ = nh.advertise<std_msgs::Float32MultiArray>("/encoder", 1);
     pub_sensor_ = nh.advertise<std_msgs::Float32MultiArray>("/sensor", 1);
     pub_switch_ = nh.advertise<std_msgs::Float32MultiArray>("/switch", 1);
 
@@ -87,7 +87,7 @@ private:
     sub_twist_ = nh.subscribe("/cmd_vel", 1,&RobotTestNode::twistcb, this);
     sub_motor_ = nh.subscribe("/motor", 1,&RobotTestNode::motorcb, this);
     sub_cylinder_ = nh.subscribe("/cylinder", 1,&RobotTestNode::cylindercb, this);
-    sub_serve_ = nh.subscribe("/serve", 1,&RobotTestNode::servecb, this);
+    sub_servo_ = nh.subscribe("/servo", 1,&RobotTestNode::servocb, this);
 
     // ros::Subscriber sub = nh.subscribe("chatter", 5, chatterCallback);
   }
